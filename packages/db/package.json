@@ -13,10 +13,6 @@
     "studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "mongoose": "^9.4.1",
-    "pg": "^8.20.0"
-  },
-  "devDependencies": {
-    "@types/pg": "^8.20.0"
+    "mongoose": "^9.4.1"
   }
 }

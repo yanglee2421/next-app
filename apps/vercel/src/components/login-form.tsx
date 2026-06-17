@@ -10,8 +10,8 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { loginAction } from "@/ioc/auth/actions";
 import { cn } from "@/lib/utils";
-import { loginAction } from "@/shared/actions/auth";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";

@@ -1,8 +1,6 @@
 import { defineConfig } from "drizzle-kit";
 
-// const POSTGRES_URL = process.env.POSTGRES_URL!;
-const POSTGRES_URL =
-  "postgresql://postgres.klibaldsvrxgtdraaugd:postgresql2026@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres";
+const POSTGRES_URL = process.env.POSTGRES_URL!;
 
 export default defineConfig({
   schema: "./src/postgres/schema.ts",
@@ -10,6 +8,7 @@ export default defineConfig({
   dialect: "postgresql",
   dbCredentials: {
     url: POSTGRES_URL,
-    // ssl: false,
   },
+  tablesFilter: [],
+  schemaFilter: ["public", "app"],
 });

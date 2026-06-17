@@ -1,3 +1,6 @@
-import { createDB } from "db/postgres";
+import { relations, schema } from "db/postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgresJS from "postgres";
 
-export const postgres = createDB(process.env.POSTGRES_URL!);
+const client = postgresJS(process.env.POSTGRES_URL!, { prepare: false });
+export const postgres = drizzle({ client, schema, relations });

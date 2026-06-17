@@ -24,17 +24,22 @@ import {
   LogOutIcon,
 } from "lucide-react";
 import Link from "next/link";
+import React from "react";
 
-export function NavUser({
-  user,
-}: {
+interface NavUserProps {
   user: {
     name: string;
     email: string;
     avatar: string;
   };
-}) {
+}
+
+export const NavUser = ({ user }: NavUserProps) => {
   const { isMobile } = useSidebar();
+
+  React.useEffect(() => {
+    console.log(isMobile);
+  }, []);
 
   return (
     <SidebarMenu>
@@ -105,4 +110,4 @@ export function NavUser({
       </SidebarMenuItem>
     </SidebarMenu>
   );
-}
+};

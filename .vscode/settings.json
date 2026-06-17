@@ -1,6 +1,7 @@
 {
   "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit"
+    "source.organizeImports": "explicit",
+    "source.fixAll.oxc": "explicit"
   },
   "editor.fontSize": 20,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -12,5 +13,6 @@
   "workbench.iconTheme": "vscode-icons",
   "workbench.colorTheme": "Dark Modern",
 
-  "css.lint.unknownAtRules": "ignore"
+  "css.lint.unknownAtRules": "ignore",
+  "oxc.enable.oxfmt": false
 }
