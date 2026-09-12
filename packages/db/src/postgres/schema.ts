@@ -15,22 +15,16 @@ export const kvTable = app.table("kv", {
   value: text("value"),
 });
 
-export type KV = typeof kvTable.$inferSelect;
-
 export const roleGroups = app.table("role_groups", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: text("name").notNull(),
 });
-
-export type RoleGroup = typeof roleGroups.$inferSelect;
 
 export const permissions = app.table("permissions", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: text("name").notNull(),
   label: text("label"),
 });
-
-export type Permission = typeof permissions.$inferSelect;
 
 export const users = app.table("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -43,8 +37,6 @@ export const users = app.table("users", {
     .references(() => roleGroups.id),
 });
 
-export type User = typeof users.$inferSelect;
-
 export const sessions = pgTable("sessions", {
   id: uuid().primaryKey().defaultRandom(),
   token: text("token"),
@@ -52,8 +44,6 @@ export const sessions = pgTable("sessions", {
   userId: integer("user_id").references(() => users.id),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
 });
-
-export type Session = typeof sessions.$inferSelect;
 
 export const organizations = app.table("organizations", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -64,8 +54,6 @@ export const organizations = app.table("organizations", {
     .references(() => roleGroups.id),
 });
 
-export type Organization = typeof organizations.$inferSelect;
-
 export const roles = app.table("roles", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: text("name").notNull(),
@@ -75,9 +63,7 @@ export const roles = app.table("roles", {
     .references(() => roleGroups.id),
 });
 
-export type Role = typeof roles.$inferSelect;
-
-export const overtimes = pgTable("xx", {
+export const overtimes = pgTable("overtimes", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   date: timestamp("date", { withTimezone: true }).notNull().defaultNow(),
   hours: integer("hours").notNull().default(8),
@@ -87,8 +73,6 @@ export const overtimes = pgTable("xx", {
     .notNull()
     .references(() => users.id),
 });
-
-export type Overtime = typeof overtimes.$inferSelect;
 
 // Many to many map tables
 
@@ -126,3 +110,12 @@ export const rolePermissions = app.table(
     }),
   ],
 );
+
+export type KV = typeof kvTable.$inferSelect;
+export type Permission = typeof permissions.$inferSelect;
+export type Overtime = typeof overtimes.$inferSelect;
+export type RoleGroup = typeof roleGroups.$inferSelect;
+export type User = typeof users.$inferSelect;
+export type Organization = typeof organizations.$inferSelect;
+export type Session = typeof sessions.$inferSelect;
+export type Role = typeof roles.$inferSelect;
