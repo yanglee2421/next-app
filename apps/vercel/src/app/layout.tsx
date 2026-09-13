@@ -1,5 +1,6 @@
 import { QueryProvider } from "@/components/query/query-provider";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -32,7 +33,10 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <TooltipProvider>{children}</TooltipProvider>
+            <TooltipProvider>
+              <Toaster />
+              {children}
+            </TooltipProvider>
           </ThemeProvider>
         </QueryProvider>
       </body>

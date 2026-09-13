@@ -21,6 +21,7 @@ export const credentials = pgTable("credentials", {
 export const overtimes = pgTable("overtimes", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   date: date("date", { mode: "date" }).notNull(),
+  duration: integer().default(8),
   note: text(),
 
   createAt: date("createAt", { mode: "date" }).defaultNow(),

@@ -1,35 +1,14 @@
-import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-  InputGroupText,
-  InputGroupTextarea,
-} from "@/components/ui/input-group";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import { container } from "@/ioc";
 import { schema } from "db/postgres";
-import { ArchiveRestore, CalendarIcon, Save } from "lucide-react";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { Add } from "./add";
+import { Credentials } from "./credentials";
 
+const postgres = container.cradle.pgsql.client;
 const setAccessCookie = async (accessToken: string) => {
   const cookie = await cookies();
 
@@ -37,20 +16,50 @@ const setAccessCookie = async (accessToken: string) => {
   revalidatePath("/");
 };
 
-const saveAction = async (formData: FormData) => {
+const saveAction = async (accessToken: string) => {
   "use server";
 
-  const accessToken = formData.get("accessToken");
-
-  if (typeof accessToken !== "string") {
-    return;
-  }
-
-  await postgres.insert(schema.credentials).values({ accessToken });
-  setAccessCookie(accessToken);
+  await postgres
+    .insert(schema.credentials)
+    .values({ accessToken })
+    .onConflictDoNothing({ target: schema.credentials.accessToken });
+  await setAccessCookie(accessToken);
 };
 
-const postgres = container.cradle.pgsql.client;
+interface AddActionInput {
+  date: string;
+  duration: number;
+  note: string;
+}
+
+const addAction = async (value: AddActionInput) => {
+  "use server";
+
+  const cookie = await cookies();
+  const accessToken = cookie.get("accessToken")?.value || "";
+
+  if (!accessToken) {
+    throw new Error("Access Token is required!");
+  }
+
+  const [credential] = await postgres
+    .select()
+    .from(schema.credentials)
+    .where(eq(schema.credentials.accessToken, accessToken));
+
+  if (!credential) {
+    throw new Error("Invalid access token");
+  }
+
+  await postgres.insert(schema.overtimes).values({
+    date: new Date(value.date),
+    duration: value.duration,
+    note: value.note,
+    credentialId: credential.id,
+  });
+
+  revalidatePath("/");
+};
 
 export default async function Page() {
   const cookie = await cookies();
@@ -62,103 +71,8 @@ export default async function Page() {
 
   return (
     <div className="space-y-6 p-6">
-      <Card>
-        <CardContent>
-          <form action={saveAction}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="input-button-group">Search</FieldLabel>
-                <ButtonGroup>
-                  <Input
-                    name="accessToken"
-                    type="text"
-                    placeholder="Type to search..."
-                  />
-                  <Button type="submit" variant="outline">
-                    Save
-                  </Button>
-                </ButtonGroup>
-              </Field>
-              <Field>
-                <Button type="button" variant={"link"}>
-                  Auto generate
-                </Button>
-              </Field>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Overtime Add</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form>
-            <FieldGroup>
-              <Field>
-                <FieldLabel>Date</FieldLabel>
-                <InputGroup>
-                  <InputGroupInput />
-                  <InputGroupAddon align="inline-end">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <InputGroupButton
-                          id="date-picker"
-                          variant="ghost"
-                          size="icon-xs"
-                          aria-label="Select date"
-                        >
-                          <CalendarIcon />
-                          <span className="sr-only">Select date</span>
-                        </InputGroupButton>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        className="w-auto overflow-hidden p-0"
-                        align="end"
-                        alignOffset={-8}
-                        sideOffset={10}
-                      >
-                        <Calendar mode="single" />
-                      </PopoverContent>
-                    </Popover>
-                  </InputGroupAddon>
-                </InputGroup>
-              </Field>
-              <Field>
-                <FieldLabel>Duration</FieldLabel>
-                <Input />
-              </Field>
-              <Field>
-                <FieldLabel>Note</FieldLabel>
-                <InputGroup>
-                  <InputGroupTextarea
-                    placeholder="I'm having an issue with the login button on mobile."
-                    rows={6}
-                    className="min-h-24 resize-none"
-                  />
-                  <InputGroupAddon align="block-end">
-                    <InputGroupText className="tabular-nums">
-                      99/100 characters
-                    </InputGroupText>
-                  </InputGroupAddon>
-                </InputGroup>
-              </Field>
-            </FieldGroup>
-          </form>
-        </CardContent>
-        <CardFooter>
-          <div className="flex items-center gap-3">
-            <Button className="uppercase">
-              <Save />
-              save
-            </Button>
-            <Button variant={"outline"} className="uppercase">
-              <ArchiveRestore />
-              reset
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
+      <Credentials saveAction={saveAction} />
+      <Add action={addAction} />
       <Card>
         <Table>
           <TableHeader></TableHeader>
