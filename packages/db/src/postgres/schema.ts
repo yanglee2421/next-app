@@ -1,4 +1,11 @@
-import { date, integer, pgSchema, pgTable, text } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  date,
+  integer,
+  pgSchema,
+  pgTable,
+  text,
+} from "drizzle-orm/pg-core";
 
 export const app = pgSchema("app");
 
@@ -23,6 +30,7 @@ export const overtimes = pgTable("overtimes", {
   date: date("date", { mode: "date" }).notNull(),
   duration: integer().default(8),
   note: text(),
+  cashed: boolean().default(false),
 
   createAt: date("createAt", { mode: "date" }).defaultNow(),
   updateAt: date("updateAt", { mode: "date" })

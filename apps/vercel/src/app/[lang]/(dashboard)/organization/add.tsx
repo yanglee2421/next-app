@@ -28,7 +28,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ArchiveRestore, ChevronDownIcon, Loader, Save } from "lucide-react";
 import React from "react";
@@ -50,6 +50,8 @@ interface AddProps {
 export const Add = (props: AddProps) => {
   const formId = React.useId();
 
+  const queryClient = useQueryClient();
+
   const submit = useMutation({
     mutationFn: async (value: Values) => {
       await props.action(value);
@@ -57,7 +59,8 @@ export const Add = (props: AddProps) => {
     onError: (error) => {
       toast.error(error.message);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["overtimes"] });
       toast.success("Successfully!");
     },
   });

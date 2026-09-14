@@ -11,7 +11,6 @@ const lines = fileContent.split("\n");
 const reg = /^POSTGRES_URL=(?<value>.+)/;
 const POSTGRES_URLLine = lines.find((line) => reg.test(line)) || "";
 const POSTGRES_URL = reg.exec(POSTGRES_URLLine)?.groups?.value || "";
-console.log(POSTGRES_URL);
 
 export default defineConfig({
   schema: "./src/postgres/schema.ts",

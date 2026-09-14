@@ -1,12 +1,11 @@
-import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import { container } from "@/ioc";
 import { schema } from "db/postgres";
-import { eq } from "drizzle-orm";
+import { eq, count as sqlCount } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { Add } from "./add";
 import { Credentials } from "./credentials";
+import { Overtimes } from "./overtimes";
 
 const postgres = container.cradle.pgsql.client;
 const setAccessCookie = async (accessToken: string) => {
@@ -61,28 +60,37 @@ const addAction = async (value: AddActionInput) => {
   revalidatePath("/");
 };
 
-export default async function Page() {
+const queryAction = async () => {
+  "use server";
   const cookie = await cookies();
   const accessToken = cookie.get("accessToken")?.value || "";
-  const result = await postgres.query.credentials.findFirst({
-    where: { accessToken },
-    with: { overtimes: true },
-  });
+  const [credential] = await postgres
+    .select()
+    .from(schema.credentials)
+    .where(eq(schema.credentials.accessToken, accessToken));
 
+  if (!credential) {
+    throw new Error("Invalid access token");
+  }
+
+  const query = postgres
+    .select()
+    .from(schema.overtimes)
+    .where(eq(schema.overtimes.credentialId, credential.id));
+  const [{ count }] = await postgres
+    .select({ count: sqlCount() })
+    .from(query.as("rows"));
+  const rows = await query;
+
+  return { count, rows };
+};
+
+export default async function Page() {
   return (
     <div className="space-y-6 p-6">
       <Credentials saveAction={saveAction} />
       <Add action={addAction} />
-      <Card>
-        <Table>
-          <TableHeader></TableHeader>
-          <TableBody>
-            {result?.overtimes.map((row) => {
-              return <TableRow key={row.id}></TableRow>;
-            })}
-          </TableBody>
-        </Table>
-      </Card>
+      <Overtimes action={queryAction} />
     </div>
   );
 }

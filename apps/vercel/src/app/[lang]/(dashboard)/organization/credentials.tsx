@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader, Save } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
@@ -30,6 +30,8 @@ export const Credentials = (props: CredentialsProps) => {
 
   const formId = React.useId();
 
+  const queryClient = useQueryClient();
+
   const submit = useMutation({
     mutationFn: async (accessToken: string) => {
       await saveAction(accessToken);
@@ -37,7 +39,8 @@ export const Credentials = (props: CredentialsProps) => {
     onError: (error) => {
       toast.error(error.message);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["overtimes"] });
       toast.success("Successfully!");
     },
   });
