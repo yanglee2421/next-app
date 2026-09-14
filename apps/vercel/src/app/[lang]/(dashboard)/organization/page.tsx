@@ -11,7 +11,9 @@ const postgres = container.cradle.pgsql.client;
 const setAccessCookie = async (accessToken: string) => {
   const cookie = await cookies();
 
-  cookie.set("accessToken", accessToken);
+  cookie.set("accessToken", accessToken, {
+    maxAge: 60 * 60 * 24 * 7,
+  });
   revalidatePath("/");
 };
 
@@ -57,6 +59,7 @@ const addAction = async (value: AddActionInput) => {
     credentialId: credential.id,
   });
 
+  await setAccessCookie(accessToken);
   revalidatePath("/");
 };
 
@@ -81,6 +84,8 @@ const queryAction = async () => {
     .select({ count: sqlCount() })
     .from(query.as("rows"));
   const rows = await query;
+
+  await setAccessCookie(accessToken);
 
   return { count, rows };
 };
