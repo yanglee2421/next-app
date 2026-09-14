@@ -1,4 +1,4 @@
-import { postgres } from "@/shared/instances/postgres";
+import { container } from "@/ioc";
 import { schema } from "db/postgres";
 import { createFactory } from "hono/factory";
 import { logger } from "hono/logger";
@@ -14,6 +14,7 @@ const factory = createFactory<Env>({
 });
 
 const helloHanldes = factory.createHandlers(async (c) => {
+  const postgres = container.cradle.pgsql.client;
   const rows = await postgres.select().from(schema.users);
 
   return c.json({

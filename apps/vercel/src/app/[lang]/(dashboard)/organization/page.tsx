@@ -1,11 +1,96 @@
-import { postgres } from "@/shared/instances/postgres";
+import { container } from "@/ioc";
+import { schema } from "db/postgres";
+import { eq, count as sqlCount } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { Add } from "./add";
+import { Credentials } from "./credentials";
+import { Overtimes } from "./overtimes";
 
-export default async function Page() {
-  const organizations = await postgres.query.users.findMany({
-    with: {
-      organizations: true,
-    },
+const postgres = container.cradle.pgsql.client;
+const setAccessCookie = async (accessToken: string) => {
+  const cookie = await cookies();
+
+  cookie.set("accessToken", accessToken);
+  revalidatePath("/");
+};
+
+const saveAction = async (accessToken: string) => {
+  "use server";
+
+  await postgres
+    .insert(schema.credentials)
+    .values({ accessToken })
+    .onConflictDoNothing({ target: schema.credentials.accessToken });
+  await setAccessCookie(accessToken);
+};
+
+interface AddActionInput {
+  date: string;
+  duration: number;
+  note: string;
+}
+
+const addAction = async (value: AddActionInput) => {
+  "use server";
+
+  const cookie = await cookies();
+  const accessToken = cookie.get("accessToken")?.value || "";
+
+  if (!accessToken) {
+    throw new Error("Access Token is required!");
+  }
+
+  const [credential] = await postgres
+    .select()
+    .from(schema.credentials)
+    .where(eq(schema.credentials.accessToken, accessToken));
+
+  if (!credential) {
+    throw new Error("Invalid access token");
+  }
+
+  await postgres.insert(schema.overtimes).values({
+    date: new Date(value.date),
+    duration: value.duration,
+    note: value.note,
+    credentialId: credential.id,
   });
 
-  return <></>;
+  revalidatePath("/");
+};
+
+const queryAction = async () => {
+  "use server";
+  const cookie = await cookies();
+  const accessToken = cookie.get("accessToken")?.value || "";
+  const [credential] = await postgres
+    .select()
+    .from(schema.credentials)
+    .where(eq(schema.credentials.accessToken, accessToken));
+
+  if (!credential) {
+    throw new Error("Invalid access token");
+  }
+
+  const query = postgres
+    .select()
+    .from(schema.overtimes)
+    .where(eq(schema.overtimes.credentialId, credential.id));
+  const [{ count }] = await postgres
+    .select({ count: sqlCount() })
+    .from(query.as("rows"));
+  const rows = await query;
+
+  return { count, rows };
+};
+
+export default async function Page() {
+  return (
+    <div className="space-y-6 p-6">
+      <Credentials saveAction={saveAction} />
+      <Add action={addAction} />
+      <Overtimes action={queryAction} />
+    </div>
+  );
 }
